@@ -13,6 +13,8 @@ namespace ALP_TCPChatServer
      * 
      * Notes:
      * - System works, disconnects without server crashing
+     * 
+     * - Remove ReadTimeout and replace with ping pong to check if alive, prevents closing the socket 
      */
 
     class Program
@@ -34,21 +36,21 @@ namespace ALP_TCPChatServer
             string IP = "192.168.1.66";
             int portNum = 2693;
 
-            TcpListener serverListen = new TcpListener(System.Net.IPAddress.Parse(IP), portNum);
+            TcpListener serverSock = new TcpListener(System.Net.IPAddress.Parse(IP), portNum);
             TcpClient clientSock = default(TcpClient);
 
             int counter = 0;
 
-            serverListen.Start();
-            Console.WriteLine($"<< Listening >>\n" +
-                $"<< IP: {IP}:{portNum} >>");
+            serverSock.Start();
+            Console.WriteLine("<< Server Details >>\n" +
+                $"<< {IP}:{portNum} >>");
 
             Console.WriteLine("<< Server Started >>");
 
             while (true)
             {
                 counter++;
-                clientSock = serverListen.AcceptTcpClient();
+                clientSock = serverSock.AcceptTcpClient();
 
                 byte[] bytesFrom = new byte[clientSock.ReceiveBufferSize];
                 string dataFromClient = null;
@@ -76,9 +78,7 @@ namespace ALP_TCPChatServer
             // HERE
             // Kill server 
 
-            clientSock.Close();
-            serverListen.Stop();
-            Console.WriteLine("<< Server Closed >>");
+            KillServer(clientSock, serverSock);
             Console.ReadLine();
         }
 
@@ -111,14 +111,16 @@ namespace ALP_TCPChatServer
             clientsList.Remove(clientNum);
         }
 
-        public static void KillServer()
+        public static void KillServer(TcpClient cS, TcpListener sSock)
         {
-
+            cS.Close();
+            sSock.Stop();
+            Console.WriteLine("<< Server shutdown >>");
         }
 
         public static void RestartServer()
         {
-
+            //TODO: Create separate method so RestartServer() can call method to restart server
         }
     }
 }
