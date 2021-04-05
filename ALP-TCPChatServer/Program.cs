@@ -11,7 +11,7 @@ namespace ALP_TCPChatServer
      * TODO: Be able to send hashtable to clients and update
      * TODO: Kill server command
      * TODO: Restart server command
-     * 
+     * TODO: Create protocol cases
      * Notes:
      * - System works, disconnects without server crashing
      * 
@@ -33,6 +33,9 @@ namespace ALP_TCPChatServer
 
         static void Main(string[] args)
         {
+            Server server = new Server(System.Net.IPAddress.Parse("192.168.1.66"), 2693);
+
+            /*
             //System.Net.IPAddress IP = System.Net.IPAddress.Parse("192.168.1.66");
             string IP = "192.168.1.66";
             int portNum = 2693;
@@ -81,11 +84,10 @@ namespace ALP_TCPChatServer
 
             KillServer(clientSock, serverSock);
             Console.ReadLine();
+            */
         }
 
-        // If false, send a server message $"/join/ {username}"
-        //
-
+        /*
         public static void BroadcastMsg(string msg, string username, bool userMsgFlag)
         {
             foreach (DictionaryEntry Item in clientsList)
@@ -126,5 +128,6 @@ namespace ALP_TCPChatServer
         {
             //TODO: Create separate method so RestartServer() can call method to restart server
         }
+        */
     }
 }

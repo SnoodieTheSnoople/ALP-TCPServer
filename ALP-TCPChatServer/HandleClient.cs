@@ -9,14 +9,14 @@ namespace ALP_TCPChatServer
     public class HandleClient
     {
         private TcpClient _clientSock;
-        private string _clientNum;
+        private string _clientName;
         private Hashtable _clientsList;
         private Thread _clientThread;
 
-        public void StartClient(TcpClient clientSock, string clientNum, Hashtable clientList)
+        public void StartClient(TcpClient clientSock, string clientName, Hashtable clientList)
         {
             _clientSock = clientSock;
-            _clientNum = clientNum;
+            _clientName = clientName;
             _clientsList = clientList;
             _clientThread = new Thread(_DoChat);
 
@@ -29,8 +29,8 @@ namespace ALP_TCPChatServer
             int requestCount = 0;
             byte[] bytesFrom = new byte[_clientSock.ReceiveBufferSize];
             string dataFromClient = null;
-            byte[] sendBytes = null;
-            string serverResponse = null;
+            //byte[] sendBytes = null;
+            //string serverResponse = null;
             string rCount = null;
 
             while (true)
@@ -52,11 +52,11 @@ namespace ALP_TCPChatServer
                     dataFromClient = Encoding.UTF8.GetString(bytesFrom);
                     dataFromClient = dataFromClient.Substring(0, dataFromClient.IndexOf("$"));
 
-                    Console.WriteLine($"From {_clientNum}: {dataFromClient}");
+                    Console.WriteLine($"From {_clientName}: {dataFromClient}");
 
                     rCount = Convert.ToString(requestCount);
 
-                    Program.BroadcastMsg(dataFromClient, _clientNum, true);
+                    Program.BroadcastMsg(dataFromClient, _clientName, true);
                 }
                 catch (System.IO.IOException e)
                 {
@@ -75,7 +75,7 @@ namespace ALP_TCPChatServer
         private void _EndProcess()
         {
             _clientSock.Close();
-            Program.RemoveFromList(_clientSock, _clientNum);
+            Program.RemoveFromList(_clientSock, _clientName);
         }
     }
 }

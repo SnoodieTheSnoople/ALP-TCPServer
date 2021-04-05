@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -19,10 +20,10 @@ namespace ALP_TCPChatServer
             this.IP = IP;
             this.portNum = portNum;
 
-            InitialiseServer();
+            _InitialiseServer();
         }
 
-        private void InitialiseServer()
+        private void _InitialiseServer()
         {
             serverSock = new TcpListener(IP, portNum);
             clientSock = default(TcpClient);
@@ -30,14 +31,17 @@ namespace ALP_TCPChatServer
             Console.WriteLine("<< SERVER STARTED >> ");
             Console.WriteLine($"<< DETAILS >>\n IP: {IP}\nPort: {portNum}\n\n");
 
+            _RunServer();
         }
 
+        /*
         private void AcceptClient()
         {
             clientSock = serverSock.AcceptTcpClient();
         }
+        */
 
-        private string GetName()
+        private string _GetName()
         {
             byte[] bytesFrom = new byte[clientSock.ReceiveBufferSize];
             string dataFromClient = null;
@@ -57,20 +61,39 @@ namespace ALP_TCPChatServer
             return dataFromClient; // Username received
         }
 
-        private void BroadcastMsg(string msg, string username, bool userMsgFlag)
+        public void BroadcastMsg(string msg, string username, bool userMsgFlag)
         {
-            throw new NotImplementedException();
+            foreach (DictionaryEntry Item in clientsList)
+            {
+                TcpClient broadcastSocket;
+                broadcastSocket = (TcpClient)Item.Value;
+
+                NetworkStream broadcastStream = broadcastSocket.GetStream();
+                byte[] broadcastBytes;
+
+                if (userMsgFlag == true)
+                {
+                    broadcastBytes = Encoding.UTF8.GetBytes($"{username} >> {msg}");
+                }
+                else
+                {
+                    broadcastBytes = Encoding.UTF8.GetBytes(msg);
+                }
+
+                broadcastStream.Write(broadcastBytes);
+                broadcastStream.Flush();
+            }
         }
 
-        private void RunServer()
+        private void _RunServer()
         {
             int counter = 0;
 
             while (true)
             {
                 counter++;
-                AcceptClient();
-                string username = GetName();
+                clientSock = serverSock.AcceptTcpClient();
+                string username = _GetName();
 
                 BroadcastMsg($"{username} has joined the server!", username, false);
                 Console.WriteLine($"{username} has joined the server!");
@@ -78,11 +101,62 @@ namespace ALP_TCPChatServer
                 HandleClient handle = new HandleClient();
                 handle.StartClient(clientSock, username, clientsList);
             }
+
+            //Kill server
+            KillServer();
+            Console.ReadLine();
         }
 
         public void AddClient(string name, TcpClient clientSocket)
         {
+            //Hashtable -> username, socket number
             clientsList.Add(name, clientSocket);
+        }
+
+        public void RemoveClient(TcpClient client, string clientName)
+        {
+            clientsList.Remove(clientName);
+        }
+
+        public void KillServer()
+        {
+            clientSock.Close();
+            serverSock.Stop();
+            Console.WriteLine("<< Server shutdown >>");
+        }
+
+        public void RestartServer()
+        {
+            clientSock.Close();
+            serverSock.Stop();
+            Console.WriteLine("<< Restarting server >>");
+            _InitialiseServer();
+        }
+
+        public void SendList()
+        {
+            /*
+             * Send list:
+             * Cycle through hashtable of users
+             * Send each user in a message
+             * Client receives string, separates by ','
+             * Client adds each value in list to listbox
+             */
+
+            string usernames = "/namelist/ ";
+            //List<string> usernames = new List<string>();
+
+            foreach (string name in clientsList)
+            {
+                //usernames.Add(name);
+                usernames += $"{name}, ";
+            }
+        }
+
+        public void SendJoin(string name)
+        {
+            //Sets join protocol
+            string userJoin = $"/join/ {name}";
         }
     }
 }
