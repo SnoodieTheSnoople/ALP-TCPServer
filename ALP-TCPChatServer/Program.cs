@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace ALP_TCPChatServer
@@ -81,6 +82,9 @@ namespace ALP_TCPChatServer
             KillServer(clientSock, serverSock);
             Console.ReadLine();
         }
+
+        // If false, send a server message $"/join/ {username}"
+        //
 
         public static void BroadcastMsg(string msg, string username, bool userMsgFlag)
         {
