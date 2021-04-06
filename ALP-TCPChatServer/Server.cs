@@ -15,6 +15,8 @@ namespace ALP_TCPChatServer
         TcpClient clientSock;
         Hashtable clientsList = new Hashtable();
 
+        ServerCmd cmd = new ServerCmd();
+
         public Server(IPAddress IP, int portNum)
         {
             this.IP = IP;
@@ -29,7 +31,7 @@ namespace ALP_TCPChatServer
             clientSock = default(TcpClient);
             serverSock.Start();
             Console.WriteLine("<< SERVER STARTED >> ");
-            Console.WriteLine($"<< DETAILS >>\n IP: {IP}\nPort: {portNum}\n\n");
+            Console.WriteLine($"<< DETAILS >>\nIP: {IP}\nPort: {portNum}\n\n");
 
             _RunServer();
         }
@@ -52,12 +54,14 @@ namespace ALP_TCPChatServer
             dataFromClient = Encoding.UTF8.GetString(bytesFrom);
             dataFromClient = dataFromClient.Substring(0, dataFromClient.IndexOf("$"));
 
-            AddClient(dataFromClient, clientSock);
+            //AddClient(dataFromClient, clientSock);
+            cmd.AddClient(dataFromClient, clientSock);
+            /*
             foreach (string key in clientsList.Keys)
             {
                 Console.WriteLine($"{key} : {clientsList[key]}");
             }
-
+            */
             return dataFromClient; // Username received
         }
 
@@ -95,8 +99,11 @@ namespace ALP_TCPChatServer
                 clientSock = serverSock.AcceptTcpClient();
                 string username = _GetName();
 
-                BroadcastMsg($"{username} has joined the server!", username, false);
+                //BroadcastMsg($"{username} has joined the server!", username, false);
+                cmd.BroadcastMsg($"{username} has joined the server!", username, false);
                 Console.WriteLine($"{username} has joined the server!");
+
+                cmd.SendList();
 
                 HandleClient handle = new HandleClient();
                 handle.StartClient(clientSock, username, clientsList);
@@ -132,6 +139,7 @@ namespace ALP_TCPChatServer
             Console.WriteLine("<< Restarting server >>");
             _InitialiseServer();
         }
+
 
         public void SendList()
         {

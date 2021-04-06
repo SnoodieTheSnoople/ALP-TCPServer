@@ -13,6 +13,8 @@ namespace ALP_TCPChatServer
         private Hashtable _clientsList;
         private Thread _clientThread;
 
+        ServerCmd cmd = new ServerCmd();
+
         public void StartClient(TcpClient clientSock, string clientName, Hashtable clientList)
         {
             _clientSock = clientSock;
@@ -56,7 +58,8 @@ namespace ALP_TCPChatServer
 
                     rCount = Convert.ToString(requestCount);
 
-                    Program.BroadcastMsg(dataFromClient, _clientName, true);
+                    //Server.BroadcastMsg(dataFromClient, _clientName, true);
+                    cmd.BroadcastMsg(dataFromClient, _clientName, true);
                 }
                 catch (System.IO.IOException e)
                 {
@@ -75,7 +78,8 @@ namespace ALP_TCPChatServer
         private void _EndProcess()
         {
             _clientSock.Close();
-            Program.RemoveFromList(_clientSock, _clientName);
+            //Program.RemoveFromList(_clientSock, _clientName);
+            cmd.RemoveClient(_clientName, _clientSock);
         }
     }
 }
