@@ -44,8 +44,6 @@ namespace ALP_TCPChatServer
                     requestCount++;
                     NetworkStream nS = _clientSock.GetStream();
 
-                    //nS.ReadTimeout = 100000;
-
                     int bytesRead = nS.Read(bytesFrom, 0, _clientSock.ReceiveBufferSize);
 
                     if (bytesRead == 0)
@@ -58,10 +56,15 @@ namespace ALP_TCPChatServer
 
                     if (dataFromClient.Contains("/kill/"))
                     {
-                        server.ChangeStatusTrue();
+                        //FIX
+                        //server.ChangeStatusTrue();
+                        //WSACancelBlockingCall where it is closed from another thread
+                        //Abort all threads and close server
+                        server.KillServer();
                     }
                     else if (dataFromClient.Contains("/restart/"))
                     {
+                        //WORKS BUT REMOVE
                         server.RestartServer();
                     }
 
@@ -73,7 +76,7 @@ namespace ALP_TCPChatServer
                 }
                 catch (System.IO.IOException e)
                 {
-                    Console.WriteLine(e);
+                    //Console.WriteLine(e);
                     Console.WriteLine("Connection closed");
                     break;
                 }
@@ -89,6 +92,7 @@ namespace ALP_TCPChatServer
         {
             _clientSock.Close();
             serverCmd.RemoveClient(_clientName, _clientSock);
+            serverCmd.SendLeave(_clientName);
         }
     }
 }

@@ -11,10 +11,10 @@ namespace ALP_TCPChatServer
     {
         private IPAddress IP;
         private int portNum;
-        private TcpListener serverSock;
-        private TcpClient clientSock;
+        private static TcpListener serverSock;
+        private static TcpClient clientSock;
         private Hashtable clientsList = new Hashtable();
-        public static bool stopServer = false;
+        public static bool runServer;
         ServerCmd cmd = new ServerCmd();
 
         public Server() { }
@@ -60,20 +60,30 @@ namespace ALP_TCPChatServer
             int counter = 0;
 
             //while (true)
-            while (!stopServer)
+            while (!runServer)
             {
-                counter++;
-                clientSock = serverSock.AcceptTcpClient();
-                string username = _GetName();
+                try
+                {
+                    counter++;
+                    //ERROR HERE WHEN RESTARTING
+                    clientSock = serverSock.AcceptTcpClient();
+                    //----
+                    string username = _GetName();
 
-                //BroadcastMsg($"{username} has joined the server!", username, false);
-                cmd.BroadcastMsg($"{username} has joined the server!", username, false);
-                Console.WriteLine($"{username} has joined the server!");
+                    //BroadcastMsg($"{username} has joined the server!", username, false);
+                    cmd.BroadcastMsg($"{username} has joined the server!", username, false);
+                    Console.WriteLine($"{username} has joined the server!");
 
-                cmd.SendList(clientSock);
+                    cmd.SendJoin(username);
+                    cmd.SendList(clientSock);
 
-                HandleClient handle = new HandleClient();
-                handle.StartClient(clientSock, username, clientsList);
+                    HandleClient handle = new HandleClient();
+                    handle.StartClient(clientSock, username, clientsList);
+                }
+                catch
+                {
+                    break;
+                }
             }
 
             //Kill server
@@ -81,9 +91,9 @@ namespace ALP_TCPChatServer
             Console.ReadLine();
         }
 
-        private void KillServer()
+        public void KillServer()
         {
-            clientSock.Close();
+            //clientSock.Close();
             serverSock.Stop();
             Console.WriteLine("<< Server shutdown >>");
         }
@@ -98,7 +108,7 @@ namespace ALP_TCPChatServer
 
         public void ChangeStatusTrue()
         {
-            stopServer = true;
+            runServer = true;
         }
     }
 }
