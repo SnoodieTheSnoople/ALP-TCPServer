@@ -10,11 +10,22 @@ namespace ALP_TCPChatServer
 {
     class ServerCmd
     {
-        private Hashtable clientsList = new Hashtable();
+        private static Hashtable _clientsList = new Hashtable();
+        private static TcpListener _server;
+ 
+        public ServerCmd() { }
+
+        public ServerCmd(TcpListener server) { _server = server; }
+
+        public ServerCmd(Hashtable clientsList, TcpListener server) 
+        { 
+            _clientsList = clientsList;
+            _server = server;
+        }
 
         public void BroadcastMsg(string msg, string username, bool usrMsgFlag)
         {
-            foreach (DictionaryEntry Item in clientsList)
+            foreach (DictionaryEntry Item in _clientsList)
             {
                 TcpClient broadcastSocket;
                 broadcastSocket = (TcpClient)Item.Value;
@@ -30,7 +41,6 @@ namespace ALP_TCPChatServer
                 {
                     broadcastBytes = Encoding.UTF8.GetBytes(msg);
                 }
-
                 broadcastStream.Write(broadcastBytes);
                 broadcastStream.Flush();
             }
@@ -38,30 +48,45 @@ namespace ALP_TCPChatServer
 
         public void AddClient(string name, TcpClient clientSock)
         {
-            clientsList.Add(name, clientSock);
+            _clientsList.Add(name, clientSock);
         }
 
         public void RemoveClient(string name, TcpClient clientSock)
         {
-            clientsList.Remove(name);
+            _clientsList.Remove(name);
         }
 
-        public void SendList()
+        // Creates a duplicate list for the current users in the server
+        public void SendList(TcpClient client)
         {
-            string usernames = $"/namelist/ ";
+            string usernames = "/namelist/ ";
 
-            foreach (string name in clientsList)
+            foreach (string name in _clientsList.Keys)
             {
                 usernames += $"{name}, ";
             }
-            BroadcastMsg(usernames, "", false);
+
+            NetworkStream listStream = client.GetStream();
+            byte[] listBytes = Encoding.UTF8.GetBytes(usernames);
+            listStream.Write(listBytes);
+            listStream.Flush();
         }
 
         public void SendJoin(string name)
         {
-
+            string joinMsg = $"/join/ {name}";
+            BroadcastMsg(joinMsg, "", false);
         }
 
+        public void SendLeave(string name)
+        {
+            string leaveMsg = $"/leave/ {name}";
+            BroadcastMsg(leaveMsg, "", false);
+        }
 
+        public void KillServer()
+        {
+            _server.Stop();
+        }
     }
 }

@@ -13,7 +13,9 @@ namespace ALP_TCPChatServer
         private Hashtable _clientsList;
         private Thread _clientThread;
 
-        ServerCmd cmd = new ServerCmd();
+        ServerCmd serverCmd = new ServerCmd();
+        //New instance of ServerCmd()
+        Server server = new Server();
 
         public void StartClient(TcpClient clientSock, string clientName, Hashtable clientList)
         {
@@ -31,8 +33,8 @@ namespace ALP_TCPChatServer
             int requestCount = 0;
             byte[] bytesFrom = new byte[_clientSock.ReceiveBufferSize];
             string dataFromClient = null;
-            //byte[] sendBytes = null;
-            //string serverResponse = null;
+            byte[] sendBytes = null;
+            string serverResponse = null;
             string rCount = null;
 
             while (true)
@@ -42,24 +44,32 @@ namespace ALP_TCPChatServer
                     requestCount++;
                     NetworkStream nS = _clientSock.GetStream();
 
-                    nS.ReadTimeout = 100000;
+                    //nS.ReadTimeout = 100000;
 
                     int bytesRead = nS.Read(bytesFrom, 0, _clientSock.ReceiveBufferSize);
 
                     if (bytesRead == 0)
                     {
-                        throw new System.IO.IOException("Connection refused/closed");
+                        throw new System.IO.IOException("Lost connection to client");
                     }
 
                     dataFromClient = Encoding.UTF8.GetString(bytesFrom);
                     dataFromClient = dataFromClient.Substring(0, dataFromClient.IndexOf("$"));
 
+                    if (dataFromClient.Contains("/kill/"))
+                    {
+                        server.ChangeStatusTrue();
+                    }
+                    else if (dataFromClient.Contains("/restart/"))
+                    {
+                        server.RestartServer();
+                    }
+
                     Console.WriteLine($"From {_clientName}: {dataFromClient}");
 
                     rCount = Convert.ToString(requestCount);
 
-                    //Server.BroadcastMsg(dataFromClient, _clientName, true);
-                    cmd.BroadcastMsg(dataFromClient, _clientName, true);
+                    serverCmd.BroadcastMsg(dataFromClient, _clientName, true);
                 }
                 catch (System.IO.IOException e)
                 {
@@ -78,8 +88,7 @@ namespace ALP_TCPChatServer
         private void _EndProcess()
         {
             _clientSock.Close();
-            //Program.RemoveFromList(_clientSock, _clientName);
-            cmd.RemoveClient(_clientName, _clientSock);
+            serverCmd.RemoveClient(_clientName, _clientSock);
         }
     }
 }
