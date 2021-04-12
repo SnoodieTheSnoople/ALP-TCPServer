@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ALP_TCPChatServer
 {
@@ -11,11 +13,13 @@ namespace ALP_TCPChatServer
     {
         private IPAddress IP;
         private int portNum;
-        private static TcpListener serverSock;
-        private static TcpClient clientSock;
-        private Hashtable clientsList = new Hashtable();
-        public static bool runServer;
+        private TcpListener serverSock;
+        private TcpClient clientSock;
+        //private Hashtable clientsList = new Hashtable();
+        public static bool runServer = true;
         ServerCmd cmd = new ServerCmd();
+
+        Thread thread;
 
         public Server() { }
 
@@ -29,8 +33,10 @@ namespace ALP_TCPChatServer
 
         private void _InitialiseServer()
         {
-            serverSock = new TcpListener(IP, portNum);
-            clientSock = default(TcpClient);
+            serverSock = new TcpListener(IP, portNum);  //Listens and allows connections with the given IP and port number
+
+            clientSock = default(TcpClient);    //Sets null
+
             serverSock.Start();
             Console.WriteLine("<< SERVER STARTED >> ");
             Console.WriteLine($"<< DETAILS >>\nIP: {IP}\nPort: {portNum}\n--------------------" +
@@ -57,58 +63,67 @@ namespace ALP_TCPChatServer
 
         private void _RunServer()
         {
-            int counter = 0;
+            //int counter = 0;
 
-            //while (true)
-            while (!runServer)
+            //Allow the server to be shut down using a boolean
+            while (runServer)
             {
                 try
                 {
-                    counter++;
-                    //ERROR HERE WHEN RESTARTING
-                    clientSock = serverSock.AcceptTcpClient();
-                    //----
-                    string username = _GetName();
+                    //Prevent AcceptTcpClient() blocking
+                    //Allows for the server to be shut from another thread
+                    if (serverSock.Pending())
+                    {
+                        //counter++;
+                        clientSock = serverSock.AcceptTcpClient();
 
-                    //BroadcastMsg($"{username} has joined the server!", username, false);
-                    cmd.BroadcastMsg($"{username} has joined the server!", username, false);
-                    Console.WriteLine($"{username} has joined the server!");
+                        string username = _GetName();
 
-                    cmd.SendJoin(username);
-                    cmd.SendList(clientSock);
+                        cmd.BroadcastMsg($"{username} has joined the server!", username, false);
+                        Console.WriteLine($"{username} has joined the server!");
 
-                    HandleClient handle = new HandleClient();
-                    handle.StartClient(clientSock, username, clientsList);
+                        cmd.SendJoin(username);
+                        cmd.SendList(clientSock);
+
+                        HandleClient handle = new HandleClient();
+                        handle.StartClient(clientSock, username);
+                    }
+                    else
+                    {
+                        Thread.Sleep(500);
+                    }
                 }
-                catch
+                catch (Exception e)
                 {
-                    break;
+                    Console.WriteLine(e);
                 }
             }
-
             //Kill server
             KillServer();
-            Console.ReadLine();
+            //Console.ReadLine();
         }
-
-        public void KillServer()
+        
+        private void KillServer()
         {
-            //clientSock.Close();
+            clientSock.Close();
             serverSock.Stop();
             Console.WriteLine("<< Server shutdown >>");
+            Environment.Exit(0);
         }
 
+        /*
         public void RestartServer()
         {
+            clientThread.Join();
             clientSock.Close();
             serverSock.Stop();
             Console.WriteLine("<< Restarting server >>");
             _InitialiseServer();
         }
-
-        public void ChangeStatusTrue()
+        */
+        public void ChangeRunningStatus()
         {
-            runServer = true;
+            runServer = false;
         }
     }
 }

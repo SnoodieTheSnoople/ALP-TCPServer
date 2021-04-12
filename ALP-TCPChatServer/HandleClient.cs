@@ -13,35 +13,33 @@ namespace ALP_TCPChatServer
         private Hashtable _clientsList;
         private Thread _clientThread;
 
-        ServerCmd serverCmd = new ServerCmd();
-        //New instance of ServerCmd()
+        ServerCmd cmd = new ServerCmd();
+
+        //New instance of ServerCmd() to access ChangeRunningStatus()
         Server server = new Server();
 
-        public void StartClient(TcpClient clientSock, string clientName, Hashtable clientList)
+        public void StartClient(TcpClient clientSock, string clientName)
         {
             _clientSock = clientSock;
             _clientName = clientName;
-            _clientsList = clientList;
+            //_clientsList = clientList;
             _clientThread = new Thread(_DoChat);
 
             _clientThread.Start();
-
+            //_DoChat();
         }
 
-        private void _DoChat(object obj)
+        private void _DoChat()
         {
-            int requestCount = 0;
+            //int requestCount = 0;
             byte[] bytesFrom = new byte[_clientSock.ReceiveBufferSize];
             string dataFromClient = null;
-            byte[] sendBytes = null;
-            string serverResponse = null;
-            string rCount = null;
 
             while (true)
             {
                 try
                 {
-                    requestCount++;
+                    //requestCount++;
                     NetworkStream nS = _clientSock.GetStream();
 
                     int bytesRead = nS.Read(bytesFrom, 0, _clientSock.ReceiveBufferSize);
@@ -60,21 +58,19 @@ namespace ALP_TCPChatServer
                         //server.ChangeStatusTrue();
                         //WSACancelBlockingCall where it is closed from another thread
                         //Abort all threads and close server
-                        server.KillServer();
-                    }
-                    else if (dataFromClient.Contains("/restart/"))
-                    {
-                        //WORKS BUT REMOVE
-                        server.RestartServer();
+                        //_clientThread.Abort();
+                        //_clientSock.Close();
+                        //server.KillServer();
+                        server.ChangeRunningStatus();
                     }
 
                     Console.WriteLine($"From {_clientName}: {dataFromClient}");
 
-                    rCount = Convert.ToString(requestCount);
+                    //rCount = Convert.ToString(requestCount);
 
-                    serverCmd.BroadcastMsg(dataFromClient, _clientName, true);
+                    cmd.BroadcastMsg(dataFromClient, _clientName, true);
                 }
-                catch (System.IO.IOException e)
+                catch (System.IO.IOException)
                 {
                     //Console.WriteLine(e);
                     Console.WriteLine("Connection closed");
@@ -83,6 +79,7 @@ namespace ALP_TCPChatServer
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
+                    break;
                 }
             }
             _EndProcess();
@@ -91,8 +88,8 @@ namespace ALP_TCPChatServer
         private void _EndProcess()
         {
             _clientSock.Close();
-            serverCmd.RemoveClient(_clientName, _clientSock);
-            serverCmd.SendLeave(_clientName);
+            cmd.RemoveClient(_clientName, _clientSock);
+            cmd.SendLeave(_clientName);
         }
     }
 }

@@ -83,10 +83,5 @@ namespace ALP_TCPChatServer
             string leaveMsg = $"/leave/ {name}";
             BroadcastMsg(leaveMsg, "", false);
         }
-
-        public void KillServer()
-        {
-            _server.Stop();
-        }
     }
 }
