@@ -15,7 +15,6 @@ namespace ALP_TCPChatServer
         private int portNum;
         private TcpListener serverSock;
         private TcpClient clientSock;
-        //private Hashtable clientsList = new Hashtable();
         public static bool runServer = true;
         ServerCmd cmd = new ServerCmd();
 
@@ -63,7 +62,6 @@ namespace ALP_TCPChatServer
 
         private void _RunServer()
         {
-            //int counter = 0;
 
             //Allow the server to be shut down using a boolean
             while (runServer)
@@ -111,16 +109,6 @@ namespace ALP_TCPChatServer
             Environment.Exit(0);
         }
 
-        /*
-        public void RestartServer()
-        {
-            clientThread.Join();
-            clientSock.Close();
-            serverSock.Stop();
-            Console.WriteLine("<< Restarting server >>");
-            _InitialiseServer();
-        }
-        */
         public void ChangeRunningStatus()
         {
             runServer = false;
