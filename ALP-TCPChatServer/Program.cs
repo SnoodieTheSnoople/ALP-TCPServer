@@ -6,18 +6,6 @@ using System.Text;
 
 namespace ALP_TCPChatServer
 {
-    /*
-     * TODO: Implement ping/polling to check if socket is alive
-     * TODO: Be able to send hashtable to clients and update
-     * TODO: Kill server command
-     * TODO: Restart server command
-     * TODO: Create protocol cases
-     * Notes:
-     * - System works, disconnects without server crashing
-     * 
-     * - Remove ReadTimeout and replace with ping pong to check if alive, prevents closing the socket 
-     */
-
     class Program
     {
         /*
