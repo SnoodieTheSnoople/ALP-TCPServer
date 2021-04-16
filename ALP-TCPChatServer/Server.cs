@@ -18,8 +18,6 @@ namespace ALP_TCPChatServer
         public static bool runServer = true;
         ServerCmd cmd = new ServerCmd();
 
-        Thread thread;
-
         public Server() { }
 
         public Server(IPAddress IP, int portNum)
